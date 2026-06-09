@@ -145,8 +145,34 @@ def breadthFirstSearch(problem: SearchProblem) -> List[Directions]:
 
 def uniformCostSearch(problem: SearchProblem) -> List[Directions]:
     """Search the node of least total cost first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from util import PriorityQueue
+
+    startState = problem.getStartState()
+    if problem.isGoalState(startState):
+        return []
+
+    # priority queue ordered by cumulative cost
+    pq = PriorityQueue()
+    pq.push((startState, [], 0), 0)
+    # nodes whose optimal cost is finalized
+    visited = set()
+
+    while not pq.isEmpty():
+        curr, actions, currCost = pq.pop()
+        if curr in visited:
+            continue
+
+        visited.add(curr)
+
+        if problem.isGoalState(curr):
+            return actions
+
+        for next_state, action, cost in problem.getSuccessors(curr):
+            if next_state not in visited:
+                total = currCost + cost  # cumulative cost as priority
+                pq.push((next_state, actions + [action], total), total)
+
+    return []
 
 def nullHeuristic(state, problem=None) -> float:
     """
@@ -157,8 +183,37 @@ def nullHeuristic(state, problem=None) -> float:
 
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic) -> List[Directions]:
     """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from util import PriorityQueue
+
+    startState = problem.getStartState()
+    if problem.isGoalState(startState):
+        return []
+
+    # priority = current xost + predicted cost
+    pq = PriorityQueue()
+    pq.push((startState, [], 0), heuristic(startState, problem))
+    # tracks best known g
+    visited = {}
+
+    while not pq.isEmpty():
+        curr, actions, g = pq.pop()
+
+        # skip if we already processed this state
+        if curr in visited and g >= visited[curr]:
+            continue
+        visited[curr] = g
+
+        if problem.isGoalState(curr):
+            return actions
+
+        for next_state, action, cost in problem.getSuccessors(curr):
+            new_g = g + cost
+            # only enqueue if this path improves on the best known cost
+            if next_state not in visited or new_g < visited[next_state]:
+                f = new_g + heuristic(next_state, problem)  # f = current + predicted
+                pq.push((next_state, actions + [action], new_g), f)
+
+    return []
 
 # Abbreviations
 bfs = breadthFirstSearch
